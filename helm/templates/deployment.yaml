@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-go-app.fullname" . }}
+  labels:
+    app: {{ include "my-go-app.fullname" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "my-go-app.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "my-go-app.fullname" . }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/key-server", "-max-size", "{{ .Values.max_size }}", "-srv-port", "{{ .Values.srv_port }}"]
+          ports:
+            - name: http
+              containerPort: {{ .Values.srv_port }}
+          livenessProbe:
+            {{- with .Values.livenessProbe }}
+            {{- if .httpGet }}
+            httpGet:
+              path: {{ .httpGet.path }}
+              port: {{ .httpGet.port }}
+            {{- if .scheme }}
+              scheme: {{ .httpGet.scheme }}
+            {{- end }}
+            {{- else if .tcpSocket }}
+            tcpSocket:
+              port: {{ .tcpSocket.port }}
+            {{- else if .exec }}
+            exec:
+              command: {{ toYaml .exec.command | nindent 12 }}
+            {{- end }}
+            initialDelaySeconds: {{ .initialDelaySeconds }}
+            periodSeconds: {{ .periodSeconds }}
+            timeoutSeconds: {{ .timeoutSeconds | default 1 }}
+            failureThreshold: {{ .failureThreshold | default 3 }}
+            successThreshold: {{ .successThreshold | default 1 }}
+            {{- end }}
+
+          readinessProbe:
+            {{- with .Values.readinessProbe }}
+            {{- if .httpGet }}
+            httpGet:
+              path: {{ .httpGet.path }}
+              port: {{ .httpGet.port }}
+            {{- if .scheme }}
+              scheme: {{ .httpGet.scheme }}
+            {{- end }}
+            {{- else if .tcpSocket }}
+            tcpSocket:
+              port: {{ .tcpSocket.port }}
+            {{- else if .exec }}
+            exec:
+              command: {{ toYaml .exec.command | nindent 12 }}
+            {{- end }}
+            initialDelaySeconds: {{ .initialDelaySeconds }}
+            periodSeconds: {{ .periodSeconds }}
+            timeoutSeconds: {{ .timeoutSeconds | default 1 }}
+            failureThreshold: {{ .failureThreshold | default 3 }}
+            successThreshold: {{ .successThreshold | default 1 }}
+            {{- end }}
+          env:
+            {{- range .Values.env }}
+            - name: {{ .name }}
+              value: "{{ .value }}"
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
