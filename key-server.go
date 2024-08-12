@@ -13,19 +13,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var maxSize int = 1024
-var srvPort int = 1123
-
 const baseURL string = "/key/"
 
 var (
-	keyLengthHistogram = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "key_length_distribution",
-		Help:    "Length distribution of generated keys",
-		Buckets: prometheus.LinearBuckets(0, float64(srvPort)/20, 20),
-	})
-
-	httpStatusCounter = prometheus.NewCounterVec(
+	maxSize            int
+	srvPort            int
+	keyLengthHistogram prometheus.Histogram
+	httpStatusCounter  = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "http_status_codes",
 			Help: "Counter of HTTP status codes",
@@ -40,6 +34,12 @@ func main() {
 	flag.IntVar(&srvPort, "srv-port", 1123, "server listening port")
 	flag.Parse()
 
+	// Initialize Histogram bucket using initialized var max-size
+	keyLengthHistogram = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "key_length_distribution",
+		Help:    "Length distribution of generated keys",
+		Buckets: prometheus.LinearBuckets(float64(maxSize)/20, float64(maxSize)/20, 20),
+	})
 	// Register Prometheus metrics
 	prometheus.MustRegister(keyLengthHistogram)
 	prometheus.MustRegister(httpStatusCounter)
