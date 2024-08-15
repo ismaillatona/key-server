@@ -9,6 +9,7 @@ import (
 
 // Helper to setup handler and execute the request
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
+	maxSize = 1024
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(keyHandler)
 	handler.ServeHTTP(rr, req)

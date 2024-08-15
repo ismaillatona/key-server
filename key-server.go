@@ -91,8 +91,9 @@ func keyHandler(w http.ResponseWriter, r *http.Request) {
 	response := hex.EncodeToString(randomBytes)
 
 	// Record the length in the histogram
-	keyLengthHistogram.Observe(float64(length))
-
+	if keyLengthHistogram != nil {
+		keyLengthHistogram.Observe(float64(length))
+	}
 	// Write the response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(response))
